@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road to Change - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --orn-navy: #2E4A6F;
+            --orn-blue: #1E6B9E;
+            --orn-cyan: #00A8E8;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: url('travel-bg.jpg') center/cover no-repeat;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(2px);
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 1;
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 320px;
+            width: 85%;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 25px;
+        }
+
+        .title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--orn-navy);
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--orn-cyan);
+            box-shadow: 0 0 0 3px rgba(0,168,232,0.1);
+        }
+
+        .form-input::placeholder {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--orn-navy);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: var(--orn-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.8em;
+            margin-top: 12px;
+            display: none;
+            padding: 8px;
+            background: #fdf2f2;
+            border-radius: 4px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Fallback if no background image */
+        .no-bg {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="login-container">
+        <img src="orn-logo.png" alt="ORN Logo" class="logo" onerror="this.style.display='none'">
+        <div class="title">Road to Change</div>
+
+        <form id="loginForm" onsubmit="return handleLogin(event)">
+            <div class="form-group">
+                <input type="text" id="username" class="form-input" placeholder="Username" required>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="password" class="form-input" placeholder="Password" required>
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+
+        <div class="error-message" id="errorMessage">
+            Invalid credentials
+        </div>
+    </div>
+
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('errorMessage');
+
+            if (username === 'ORN' && password === 'AKTF') {
+                sessionStorage.setItem('roadmapAuth', 'true');
+                window.location.href = 'roadmap.html';
+            } else {
+                errorMsg.classList.add('show');
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
+
+            return false;
+        }
+
+        document.getElementById('username').addEventListener('input', function() {
+            document.getElementById('errorMessage').classList.remove('show');
+        });
+
+        document.getElementById('password').addEventListener('input', function() {
+            document.getElementById('errorMessage').classList.remove('show');
+        });
+
+        if (sessionStorage.getItem('roadmapAuth') === 'true') {
+            window.location.href = 'roadmap.html';
+        }
+
+        // Check if background image loads, if not use fallback
+        const img = new Image();
+        img.src = 'travel-bg.jpg';
+        img.onerror = function() {
+            document.body.classList.add('no-bg');
+        };
+    </script>
+</body>
+</html>
