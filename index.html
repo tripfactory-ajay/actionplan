@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road to Change - ORN Tracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --orn-navy: #2E4A6F;
+            --orn-blue: #1E6B9E;
+            --orn-cyan: #00A8E8;
+            --orn-green: #6BCB4B;
+            --orn-yellow: #FFE119;
+            --orn-red: #E6391A;
+            --status-blue: #2196F3;
+            --status-yellow: #FFC107;
+            --status-green: #4CAF50;
+            --status-red: #f44336;
+            --bg-white: #ffffff;
+            --bg-light: #f8f9fa;
+            --border: #e0e0e0;
+        }
+
+        @media print {
+            body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+            }
+            .no-print { display: none !important; }
+            .highway { 
+                grid-template-columns: repeat(4, 1fr) !important; 
+                gap: 10px !important;
+            }
+            .lane { 
+                box-shadow: none !important; 
+                border: 1px solid #ccc !important;
+            }
+            .task-details { display: block !important; }
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-light);
+            color: var(--orn-black);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-white);
+            padding: 15px 30px;
+            border-bottom: 3px solid var(--orn-navy);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.05);
+        }
+
+        .logo {
+            height: 40px;
+            max-width: 120px;
+            object-fit: contain;
+        }
+
+        .header-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--orn-navy);
+            margin-left: 20px;
+            border-left: 3px solid var(--orn-navy);
+            padding-left: 20px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-control {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+
+        .btn-expand {
+            background: var(--orn-blue);
+            color: white;
+        }
+
+        .btn-collapse {
+            background: var(--orn-navy);
+            color: white;
+        }
+
+        .btn-export {
+            background: var(--orn-green);
+            color: white;
+        }
+
+        .btn-control:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .export-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .export-options {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 5px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 150px;
+        }
+
+        .export-options.show {
+            display: block;
+        }
+
+        .export-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 0.85em;
+            border-bottom: 1px solid #eee;
+        }
+
+        .export-option:hover {
+            background: #f5f5f5;
+        }
+
+        .export-option:last-child {
+            border-bottom: none;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            padding: 20px 30px;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pie-chart-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .pie-chart {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--orn-cyan) 0deg 90deg,
+                var(--orn-green) 90deg 180deg,
+                var(--orn-yellow) 180deg 270deg,
+                var(--orn-red) 270deg 360deg
+            );
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .pie-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .pie-center-text {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--orn-navy);
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-text {
+            font-weight: 600;
+            color: var(--orn-navy);
+        }
+
+        .legend-percent {
+            font-weight: 700;
+            color: var(--orn-blue);
+        }
+
+        /* Highway */
+        .highway-container {
+            padding: 20px 30px;
+        }
+
+        .highway {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .lane {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-top: 4px solid;
+            min-height: 600px;
+        }
+
+        .lane.credit-points { border-top-color: var(--orn-cyan); }
+        .lane.finance-dept { border-top-color: var(--orn-green); }
+        .lane.quick-wins { border-top-color: var(--orn-yellow); }
+        .lane.business-change { border-top-color: var(--orn-red); }
+
+        .lane-header {
+            padding: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .lane-number {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .lane-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: var(--orn-navy);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .lane-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+        }
+
+        .lane.credit-points .lane-icon { background: var(--orn-cyan); color: white; }
+        .lane.finance-dept .lane-icon { background: var(--orn-green); color: white; }
+        .lane.quick-wins .lane-icon { background: var(--orn-yellow); color: var(--orn-black); }
+        .lane.business-change .lane-icon { background: var(--orn-red); color: white; }
+
+        .lane-progress {
+            margin-top: 6px;
+            font-size: 0.75em;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        .lane.credit-points .progress-fill { background: var(--orn-cyan); }
+        .lane.finance-dept .progress-fill { background: var(--orn-green); }
+        .lane.quick-wins .progress-fill { background: var(--orn-yellow); }
+        .lane.business-change .progress-fill { background: var(--orn-red); }
+
+        .tasks-container {
+            padding: 10px;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+
+        .task-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .task-card.status-not-started { border-left: 4px solid var(--status-blue); }
+        .task-card.status-in-progress { border-left: 4px solid var(--status-yellow); }
+        .task-card.status-completed { border-left: 4px solid var(--status-green); }
+        .task-card.status-blocked { border-left: 4px solid var(--status-red); }
+
+        .task-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .task-header {
+            padding: 10px;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: var(--orn-navy);
+            font-size: 0.8em;
+            line-height: 1.3;
+            flex: 1;
+            padding-right: 8px;
+        }
+
+        .expand-icon {
+            font-size: 0.7em;
+            transition: transform 0.3s;
+            color: var(--orn-blue);
+            margin-left: 4px;
+        }
+
+        .task-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .task-details {
+            display: none;
+            padding: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .task-card.expanded .task-details {
+            display: block;
+        }
+
+        .status-section {
+            margin-bottom: 10px;
+        }
+
+        .status-dropdown {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .status-dropdown.not-started {
+            background: #E3F2FD;
+            border-color: var(--status-blue);
+            color: var(--status-blue);
+        }
+
+        .status-dropdown.in-progress {
+            background: #FFF8E1;
+            border-color: var(--status-yellow);
+            color: #F57C00;
+        }
+
+        .status-dropdown.completed {
+            background: #E8F5E9;
+            border-color: var(--status-green);
+            color: var(--status-green);
+        }
+
+        .status-dropdown.blocked {
+            background: #FFEBEE;
+            border-color: var(--status-red);
+            color: var(--status-red);
+        }
+
+        .checkbox-section {
+            margin-bottom: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-size: 0.75em;
+            flex: 1;
+        }
+
+        .checkbox-completed {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .comments-section {
+            margin-bottom: 10px;
+        }
+
+        .section-label {
+            font-size: 0.7em;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .comments-box {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.8em;
+            resize: vertical;
+            min-height: 50px;
+            font-family: inherit;
+        }
+
+        .comments-box:focus {
+            outline: none;
+            border-color: var(--orn-blue);
+        }
+
+        .file-section {
+            margin-bottom: 10px;
+        }
+
+        .file-upload-btn {
+            width: 100%;
+            padding: 6px;
+            border: 1px dashed var(--border);
+            border-radius: 4px;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-size: 0.75em;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .file-upload-btn:hover {
+            border-color: var(--orn-blue);
+            background: #f0f7ff;
+        }
+
+        .file-list {
+            margin-top: 6px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 6px;
+            background: #f0f7ff;
+            border-radius: 4px;
+            margin-bottom: 3px;
+            font-size: 0.7em;
+        }
+
+        .file-remove {
+            margin-left: auto;
+            color: var(--orn-red);
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75em;
+        }
+
+        .btn-save {
+            background: var(--orn-green);
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #5ab83a;
+        }
+
+        .last-updated {
+            font-size: 0.75em;
+            color: #666;
+        }
+
+        .last-updated-time {
+            font-weight: 600;
+            color: var(--orn-navy);
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--orn-blue);
+            border-radius: 3px;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <a href="https://www.orn.com/" target="_blank" class="logo-link" title="ORN">
+                <img src="orn-logo.png" alt="ORN Logo" class="logo" onerror="this.style.display='none'">
+            </a>
+            <a href="https://www.tripfactory.com/" target="_blank" class="logo-link" title="TripFactory">
+                <img src="tripfactory-logo.png" alt="TripFactory Logo" class="logo" onerror="this.style.display='none'">
+            </a>
+            <a href="https://www.nexusdmc.com/" target="_blank" class="logo-link" title="Nexus DMC">
+                <img src="nexus-logo.png" alt="Nexus Logo" class="logo" onerror="this.style.display='none'">
+            </a>
+            <div class="header-title">Road to Change</div>
+        </div>
+        <div class="header-controls no-print">
+            <button class="btn-control btn-expand" onclick="expandAll()">📂 Expand All</button>
+            <button class="btn-control btn-collapse" onclick="collapseAll()">📁 Collapse All</button>
+            <div class="export-menu">
+                <button class="btn-control btn-export" onclick="toggleExportMenu()">📊 Export</button>
+                <div class="export-options" id="exportMenu">
+                    <div class="export-option" onclick="exportToExcel()">📈 Excel (.csv)</div>
+                    <div class="export-option" onclick="exportToPDF()">📄 PDF (Print)</div>
+                    <div class="export-option" onclick="exportToWord()">📝 Word (.doc)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="pie-chart-container">
+            <div class="pie-chart">
+                <div class="pie-center">
+                    <div class="pie-center-text" id="overall-progress">0%</div>
+                </div>
+            </div>
+        </div>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--orn-cyan);"></div>
+                <div class="legend-text">Lane 1: Credit Points</div>
+                <div class="legend-percent" id="credit-points-percent">0%</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--orn-green);"></div>
+                <div class="legend-text">Lane 2: Finance</div>
+                <div class="legend-percent" id="finance-dept-percent">0%</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--orn-yellow);"></div>
+                <div class="legend-text">Lane 3: Quick Wins</div>
+                <div class="legend-percent" id="quick-wins-percent">0%</div>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--orn-red);"></div>
+                <div class="legend-text">Lane 4: Business Change</div>
+                <div class="legend-percent" id="business-change-percent">0%</div>
+            </div>
+        </div>
+        <div class="last-updated">
+            Updated: <span class="last-updated-time" id="last-updated">--</span>
+        </div>
+    </div>
+
+    <div class="highway-container">
+        <div class="highway" id="highway">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <script>
+        const roadmapData = {
+            "credit-points": {
+                title: "Credit Points",
+                laneNumber: "Lane 1",
+                icon: "💳",
+                color: "#00A8E8",
+                tasks: [
+                    { id: 101, title: "Define Brand Identity", status: "not-started", checkboxes: [{ text: "Brand strategy defined", checked: false }, { text: "Logo finalized", checked: false }, { text: "Brand guidelines created", checked: false }], comments: "", files: [] },
+                    { id: 102, title: "Define Messaging & Positioning", status: "not-started", checkboxes: [{ text: "Value proposition defined", checked: false }, { text: "Key messages developed", checked: false }, { text: "Positioning strategy approved", checked: false }], comments: "", files: [] },
+                    { id: 103, title: "Create Collateral & Assets", status: "not-started", checkboxes: [{ text: "Marketing materials designed", checked: false }, { text: "Sales collateral created", checked: false }, { text: "Digital assets prepared", checked: false }], comments: "", files: [] },
+                    { id: 104, title: "Build Functional Website", status: "not-started", checkboxes: [{ text: "Design approved", checked: false }, { text: "Development complete", checked: false }, { text: "Testing & QA", checked: false }, { text: "Go live", checked: false }], comments: "", files: [] },
+                    { id: 105, title: "Mobile App - Members (B2C)", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 106, title: "Mobile App - Agents (B2B)", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 107, title: "Set Up Operations Infrastructure", status: "not-started", checkboxes: [{ text: "Office space secured", checked: false }, { text: "Systems setup", checked: false }, { text: "Processes defined", checked: false }], comments: "", files: [] },
+                    { id: 108, title: "Dedicated Admin Team", status: "not-started", checkboxes: [{ text: "Roles defined", checked: false }, { text: "Team hired", checked: false }, { text: "Training complete", checked: false }], comments: "", files: [] },
+                    { id: 109, title: "Reservations Team", status: "not-started", checkboxes: [{ text: "Team structure defined", checked: false }, { text: "Staff recruited", checked: false }, { text: "Systems training", checked: false }], comments: "", files: [] },
+                    { id: 110, title: "Sales Team", status: "not-started", checkboxes: [{ text: "Sales structure defined", checked: false }, { text: "Team hired", checked: false }, { text: "Product training", checked: false }], comments: "", files: [] },
+                    { id: 111, title: "Marketing Plan Execution", status: "not-started", checkboxes: [{ text: "Campaign strategy", checked: false }, { text: "Content creation", checked: false }, { text: "Channel setup", checked: false }], comments: "", files: [] },
+                    { id: 112, title: "Roadshows", status: "not-started", checkboxes: [{ text: "Locations planned", checked: false }, { text: "Materials prepared", checked: false }, { text: "Events executed", checked: false }], comments: "", files: [] },
+                    { id: 113, title: "Mailouts", status: "not-started", checkboxes: [{ text: "Database prepared", checked: false }, { text: "Content created", checked: false }, { text: "Distribution complete", checked: false }], comments: "", files: [] },
+                    { id: 114, title: "Launch Campaign", status: "not-started", checkboxes: [{ text: "Campaign planned", checked: false }, { text: "Assets ready", checked: false }, { text: "Launch executed", checked: false }], comments: "", files: [] },
+                    { id: 115, title: "Financial Setup", status: "not-started", checkboxes: [{ text: "Bank accounts opened", checked: false }, { text: "Accounting system setup", checked: false }, { text: "Payment gateways configured", checked: false }], comments: "", files: [] },
+                    { id: 116, title: "Accounting Systems", status: "not-started", checkboxes: [{ text: "Software selected", checked: false }, { text: "Chart of accounts setup", checked: false }, { text: "Reporting configured", checked: false }], comments: "", files: [] },
+                    { id: 117, title: "Compliance & Legal", status: "not-started", checkboxes: [{ text: "Legal structure finalized", checked: false }, { text: "Licenses obtained", checked: false }, { text: "Compliance review", checked: false }], comments: "", files: [] }
+                ]
+            },
+            "finance-dept": {
+                title: "Finance Dept",
+                laneNumber: "Lane 2",
+                icon: "💰",
+                color: "#6BCB4B",
+                tasks: [
+                    { id: 201, title: "Global Business Dashboard", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Test", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 202, title: "CEO Dashboard", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Test", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 203, title: "Global P&L Dashboard", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Test", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 204, title: "Global View Dashboard", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Test", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 205, title: "Business Cashflow", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Test", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 206, title: "Currency Management", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Test", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 207, title: "Finance Command", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Test", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] }
+                ]
+            },
+            "quick-wins": {
+                title: "Quick Wins",
+                laneNumber: "Lane 3",
+                icon: "⚡",
+                color: "#FFE119",
+                tasks: [
+                    { id: 301, title: "ORN Values (Branding)", status: "not-started", checkboxes: [{ text: "Content", checked: false }, { text: "Design", checked: false }, { text: "Review", checked: false }, { text: "Publish", checked: false }], comments: "", files: [] },
+                    { id: 302, title: "The Journey (Branding)", status: "not-started", checkboxes: [{ text: "Content", checked: false }, { text: "Design", checked: false }, { text: "Review", checked: false }, { text: "Publish", checked: false }], comments: "", files: [] },
+                    { id: 303, title: "Contracting Dashboard", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 304, title: "Product Dept Dashboard", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 305, title: "Supplier Dashboard", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 306, title: "Supplier Performance", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 307, title: "Marketing Conversion", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 308, title: "Marketing Spend", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 309, title: "Destination Planner", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 310, title: "Company Org Chart", status: "not-started", checkboxes: [{ text: "Data", checked: false }, { text: "Design", checked: false }, { text: "Review", checked: false }, { text: "Publish", checked: false }], comments: "", files: [] },
+                    { id: 311, title: "TripFactory Structure", status: "not-started", checkboxes: [{ text: "Data", checked: false }, { text: "Design", checked: false }, { text: "Review", checked: false }, { text: "Publish", checked: false }], comments: "", files: [] },
+                    { id: 312, title: "Escalation Action", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 313, title: "Visa Management", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 314, title: "Partner Connect", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 315, title: "Roadshow Presentation", status: "not-started", checkboxes: [{ text: "Content", checked: false }, { text: "Design", checked: false }, { text: "Review", checked: false }, { text: "Finalize", checked: false }], comments: "", files: [] },
+                    { id: 316, title: "Enquiry Routing", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 317, title: "Manager Daily", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 318, title: "Staff Daily", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] },
+                    { id: 319, title: "Knowledge Factory", status: "not-started", checkboxes: [{ text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Beta", checked: false }, { text: "Live", checked: false }], comments: "", files: [] }
+                ]
+            },
+            "business-change": {
+                title: "Business Change",
+                laneNumber: "Lane 4",
+                icon: "🔄",
+                color: "#E6391A",
+                tasks: [
+                    { id: 401, title: "B2B Command Center", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 402, title: "Buyer Management", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 403, title: "Demographics & Destinations", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 404, title: "Global Heatmap", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 405, title: "Margin Review", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 406, title: "Partner Funding", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 407, title: "Predictive Analytics", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 408, title: "Trip Points", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 409, title: "Escalations Dashboard", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 410, title: "Fleet Management", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 411, title: "Ticketing Command", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 412, title: "Travel Alerts", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 413, title: "Local Office", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 414, title: "Local Office Command", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 415, title: "Destination Planner (Product)", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 416, title: "Product Launch Flow", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 417, title: "Agent Personal Dashboard", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 418, title: "Customer Journey", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 419, title: "Customer Profile", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 420, title: "Field Manager", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 421, title: "Team Leader", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 422, title: "API Health", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 423, title: "Data Quality", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 424, title: "Platform Performance", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 425, title: "Agent Intelligence Hub", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
+                    { id: 426, title: "Travel Agent Overview", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] }
+                ]
+            }
+        };
+
+        function loadData() {
+            const saved = localStorage.getItem('ornRoadmapData_v4');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                Object.keys(parsed).forEach(laneKey => {
+                    if (roadmapData[laneKey]) {
+                        roadmapData[laneKey].tasks = parsed[laneKey].tasks;
+                    }
+                });
+            }
+            renderHighway();
+            updateStats();
+        }
+
+        function saveData() {
+            localStorage.setItem('ornRoadmapData_v4', JSON.stringify(roadmapData));
+            document.getElementById('last-updated').textContent = new Date().toLocaleString();
+        }
+
+        function renderHighway() {
+            const container = document.getElementById('highway');
+            container.innerHTML = '';
+
+            Object.keys(roadmapData).forEach(laneKey => {
+                const lane = roadmapData[laneKey];
+                const progress = calculateLaneProgress(lane);
+
+                const laneEl = document.createElement('div');
+                laneEl.className = `lane ${laneKey}`;
+
+                const tasksHtml = lane.tasks.map(task => renderTask(task, laneKey)).join('');
+
+                laneEl.innerHTML = `
+                    <div class="lane-header">
+                        <div class="lane-number">${lane.laneNumber}</div>
+                        <div class="lane-title">
+                            <div class="lane-icon">${lane.icon}</div>
+                            ${lane.title}
+                        </div>
+                        <div class="lane-progress">
+                            ${progress}% Complete
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tasks-container">
+                        ${tasksHtml}
+                    </div>
+                `;
+
+                container.appendChild(laneEl);
+            });
+        }
+
+        function renderTask(task, laneKey) {
+            const checkboxesHtml = task.checkboxes.map((cb, idx) => `
+                <div class="checkbox-item">
+                    <input type="checkbox" ${cb.checked ? 'checked' : ''} 
+                        onchange="toggleCheckbox('${laneKey}', ${task.id}, ${idx})">
+                    <span class="checkbox-label ${cb.checked ? 'checkbox-completed' : ''}">${cb.text}</span>
+                </div>
+            `).join('');
+
+            const filesHtml = task.files.map((file, idx) => `
+                <div class="file-item">
+                    <span>📎 ${file}</span>
+                    <span class="file-remove" onclick="removeFile('${laneKey}', ${task.id}, ${idx})">×</span>
+                </div>
+            `).join('');
+
+            return `
+                <div class="task-card status-${task.status}" id="task-${laneKey}-${task.id}">
+                    <div class="task-header" onclick="toggleTask('${laneKey}', ${task.id})">
+                        <div class="task-title">${task.title}</div>
+                        <span class="expand-icon">▼</span>
+                    </div>
+                    <div class="task-details">
+                        <div class="status-section">
+                            <div class="section-label">Status</div>
+                            <select class="status-dropdown ${task.status}" id="status-${laneKey}-${task.id}" 
+                                onchange="updateStatus('${laneKey}', ${task.id}, this.value)">
+                                <option value="not-started" ${task.status === 'not-started' ? 'selected' : ''}>Not Started</option>
+                                <option value="in-progress" ${task.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="blocked" ${task.status === 'blocked' ? 'selected' : ''}>Blocked</option>
+                            </select>
+                        </div>
+                        <div class="checkbox-section">
+                            ${checkboxesHtml}
+                        </div>
+                        <div class="comments-section">
+                            <div class="section-label">Comments</div>
+                            <textarea class="comments-box" id="comments-${laneKey}-${task.id}" 
+                                placeholder="Add comments..." onchange="saveTask('${laneKey}', ${task.id})">${task.comments}</textarea>
+                        </div>
+                        <div class="file-section">
+                            <div class="section-label">Files</div>
+                            <button class="file-upload-btn" 
+                                onclick="event.stopPropagation(); document.getElementById('file-${laneKey}-${task.id}').click()">
+                                📎 Upload File
+                            </button>
+                            <input type="file" id="file-${laneKey}-${task.id}" style="display: none;" 
+                                onchange="handleFileUpload('${laneKey}', ${task.id}, this)">
+                            <div class="file-list">
+                                ${filesHtml}
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-save" onclick="event.stopPropagation(); saveTask('${laneKey}', ${task.id})">💾 Save</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleTask(laneKey, taskId) {
+            const card = document.getElementById(`task-${laneKey}-${taskId}`);
+            card.classList.toggle('expanded');
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.task-card').forEach(card => card.classList.add('expanded'));
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.task-card').forEach(card => card.classList.remove('expanded'));
+        }
+
+        function updateStatus(laneKey, taskId, newStatus) {
+            const task = roadmapData[laneKey].tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = newStatus;
+                saveData();
+                renderHighway();
+                updateStats();
+            }
+        }
+
+        function toggleCheckbox(laneKey, taskId, cbIdx) {
+            const task = roadmapData[laneKey].tasks.find(t => t.id === taskId);
+            if (task) {
+                task.checkboxes[cbIdx].checked = !task.checkboxes[cbIdx].checked;
+                saveData();
+                renderHighway();
+                updateStats();
+            }
+        }
+
+        function calculateLaneProgress(lane) {
+            if (lane.tasks.length === 0) return 0;
+            let totalCbs = 0;
+            let checkedCbs = 0;
+            lane.tasks.forEach(task => {
+                totalCbs += task.checkboxes.length;
+                checkedCbs += task.checkboxes.filter(cb => cb.checked).length;
+            });
+            return totalCbs === 0 ? 0 : Math.round((checkedCbs / totalCbs) * 100);
+        }
+
+        function updateStats() {
+            let totalProgress = 0;
+            Object.keys(roadmapData).forEach(laneKey => {
+                const progress = calculateLaneProgress(roadmapData[laneKey]);
+                document.getElementById(`${laneKey}-percent`).textContent = progress + '%';
+                totalProgress += progress;
+            });
+            const overall = Math.round(totalProgress / 4);
+            document.getElementById('overall-progress').textContent = overall + '%';
+        }
+
+        function saveTask(laneKey, taskId) {
+            const task = roadmapData[laneKey].tasks.find(t => t.id === taskId);
+            if (task) {
+                task.comments = document.getElementById(`comments-${laneKey}-${taskId}`).value;
+                saveData();
+            }
+        }
+
+        function handleFileUpload(laneKey, taskId, input) {
+            const task = roadmapData[laneKey].tasks.find(t => t.id === taskId);
+            if (task && input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    task.files.push(file.name);
+                });
+                saveData();
+                renderHighway();
+            }
+        }
+
+        function removeFile(laneKey, taskId, fileIdx) {
+            const task = roadmapData[laneKey].tasks.find(t => t.id === taskId);
+            if (task) {
+                task.files.splice(fileIdx, 1);
+                saveData();
+                renderHighway();
+            }
+        }
+
+        function toggleExportMenu() {
+            document.getElementById('exportMenu').classList.toggle('show');
+        }
+
+        function exportToExcel() {
+            let csv = 'Lane,Task,Status,Progress,Comments,Files\n';
+            Object.keys(roadmapData).forEach(laneKey => {
+                const lane = roadmapData[laneKey];
+                lane.tasks.forEach(task => {
+                    const progress = Math.round((task.checkboxes.filter(cb => cb.checked).length / task.checkboxes.length) * 100);
+                    csv += `"${lane.laneNumber}: ${lane.title}","${task.title}","${task.status}","${progress}%","${task.comments}","${task.files.join('; ')}"\n`;
+                });
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Road_to_Change_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            toggleExportMenu();
+        }
+
+        function exportToPDF() {
+            window.print();
+            toggleExportMenu();
+        }
+
+        function exportToWord() {
+            const html = document.documentElement.outerHTML;
+            const blob = new Blob([html], { type: 'application/msword' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Road_to_Change_${new Date().toISOString().split('T')[0]}.doc`;
+            link.click();
+            toggleExportMenu();
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.export-menu')) {
+                document.getElementById('exportMenu').classList.remove('show');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            document.getElementById('last-updated').textContent = new Date().toLocaleString();
+        });
+    </script>
+</body>
+</html>
