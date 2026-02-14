@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Road to Change - ORN Tracker</title>
-    <style>
+        <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -14,6 +14,7 @@
             --orn-green: #6BCB4B;
             --orn-yellow: #FFE119;
             --orn-red: #E6391A;
+            --orn-purple: #9C27B0;
             --status-blue: #2196F3;
             --status-yellow: #FFC107;
             --status-green: #4CAF50;
@@ -23,21 +24,9 @@
             --border: #e0e0e0;
         }
 
-        @media print {
-            body { 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact;
-            }
-            .no-print { display: none !important; }
-            .highway { 
-                grid-template-columns: repeat(4, 1fr) !important; 
-                gap: 10px !important;
-            }
-            .lane { 
-                box-shadow: none !important; 
-                border: 1px solid #ccc !important;
-            }
-            .task-details { display: block !important; }
+        html, body {
+            overflow-x: auto;
+            min-width: fit-content;
         }
 
         body {
@@ -170,12 +159,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         .pie-chart-container {
             position: relative;
             width: 120px;
             height: 120px;
+            flex-shrink: 0;
         }
 
         .pie-chart {
@@ -183,10 +175,11 @@
             height: 100%;
             border-radius: 50%;
             background: conic-gradient(
-                var(--orn-cyan) 0deg 90deg,
-                var(--orn-green) 90deg 180deg,
-                var(--orn-yellow) 180deg 270deg,
-                var(--orn-red) 270deg 360deg
+                var(--orn-cyan) 0deg 72deg,
+                var(--orn-green) 72deg 144deg,
+                var(--orn-yellow) 144deg 216deg,
+                var(--orn-red) 216deg 288deg,
+                var(--orn-purple) 288deg 360deg
             );
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
@@ -215,18 +208,21 @@
 
         .legend {
             display: flex;
-            gap: 15px;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: center;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 6px 12px;
+            padding: 6px 10px;
             background: white;
             border-radius: 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         .legend-color {
@@ -245,15 +241,20 @@
             color: var(--orn-blue);
         }
 
-        /* Highway */
+        /* Highway - 5 COLUMNS FIXED */
         .highway-container {
             padding: 20px 30px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            width: 100%;
         }
 
         .highway {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            min-width: 1400px;
+            width: 100%;
         }
 
         .lane {
@@ -265,12 +266,14 @@
             flex-direction: column;
             border-top: 4px solid;
             min-height: 600px;
+            min-width: 260px;
         }
 
         .lane.credit-points { border-top-color: var(--orn-cyan); }
         .lane.finance-dept { border-top-color: var(--orn-green); }
         .lane.quick-wins { border-top-color: var(--orn-yellow); }
         .lane.business-change { border-top-color: var(--orn-red); }
+        .lane.service-points { border-top-color: var(--orn-purple); }
 
         .lane-header {
             padding: 12px;
@@ -288,7 +291,7 @@
         }
 
         .lane-title {
-            font-size: 1em;
+            font-size: 0.95em;
             font-weight: 700;
             color: var(--orn-navy);
             display: flex;
@@ -310,6 +313,7 @@
         .lane.finance-dept .lane-icon { background: var(--orn-green); color: white; }
         .lane.quick-wins .lane-icon { background: var(--orn-yellow); color: var(--orn-black); }
         .lane.business-change .lane-icon { background: var(--orn-red); color: white; }
+        .lane.service-points .lane-icon { background: var(--orn-purple); color: white; }
 
         .lane-progress {
             margin-top: 6px;
@@ -336,6 +340,7 @@
         .lane.finance-dept .progress-fill { background: var(--orn-green); }
         .lane.quick-wins .progress-fill { background: var(--orn-yellow); }
         .lane.business-change .progress-fill { background: var(--orn-red); }
+        .lane.service-points .progress-fill { background: var(--orn-purple); }
 
         .tasks-container {
             padding: 10px;
@@ -569,6 +574,7 @@
         .last-updated {
             font-size: 0.75em;
             color: #666;
+            white-space: nowrap;
         }
 
         .last-updated-time {
@@ -578,6 +584,7 @@
 
         ::-webkit-scrollbar {
             width: 5px;
+            height: 5px;
         }
 
         ::-webkit-scrollbar-track {
@@ -588,7 +595,38 @@
             background: var(--orn-blue);
             border-radius: 3px;
         }
-    </style>
+
+        /* Print styles */
+        @media print {
+            body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+            }
+            .no-print { display: none !important; }
+            .highway { 
+                grid-template-columns: repeat(5, 1fr) !important; 
+                gap: 5px !important;
+                min-width: auto !important;
+            }
+            .highway-container {
+                overflow-x: visible !important;
+                padding: 10px !important;
+            }
+            .lane { 
+                box-shadow: none !important; 
+                border: 1px solid #ccc !important;
+                min-height: 400px !important;
+                font-size: 0.9em;
+                page-break-inside: avoid;
+            }
+            .task-details { display: block !important; }
+            .lane-title { font-size: 0.8em !important; }
+            .task-title { font-size: 0.75em !important; }
+            .dashboard { flex-wrap: nowrap !important; }
+            .legend { flex-wrap: nowrap !important; }
+        }
+    </style></style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -648,6 +686,11 @@
                 <div class="legend-text">Lane 4: Business Change</div>
                 <div class="legend-percent" id="business-change-percent">0%</div>
             </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: var(--orn-purple);"></div>
+                <div class="legend-text">Lane 5: Service Points</div>
+                <div class="legend-percent" id="service-points-percent">0%</div>
+            </div>
         </div>
         <div class="last-updated">
             Updated: <span class="last-updated-time" id="last-updated">--</span>
@@ -661,6 +704,7 @@
     </div>
 
     <script>
+
         const roadmapData = {
             "credit-points": {
                 title: "Credit Points",
@@ -762,11 +806,365 @@
                     { id: 425, title: "Agent Intelligence Hub", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] },
                     { id: 426, title: "Travel Agent Overview", status: "not-started", checkboxes: [{ text: "Requirements", checked: false }, { text: "Design", checked: false }, { text: "Build", checked: false }, { text: "Deploy", checked: false }], comments: "", files: [] }
                 ]
+            },
+
+            "service-points": {
+                title: "Service Points",
+                laneNumber: "Lane 5",
+                icon: "📍",
+                color: "#9C27B0",
+                tasks: [
+                    // PHASE 1: FOUNDATION (Weeks 1-12)
+                    { 
+                        id: 501, 
+                        title: "PHASE 1: Market Selection & Legal", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Confirm Australia-first launch strategy", checked: false },
+                            { text: "Regulatory compliance review (transport/licensing)", checked: false },
+                            { text: "ORN Australia Pty Ltd entity setup", checked: false },
+                            { text: "Payment licenses (Stripe AU, local gateways)", checked: false },
+                            { text: "Insurance & liability framework", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 502, 
+                        title: "PHASE 1: Sydney Airport Partnership", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Initial partnership approach", checked: false },
+                            { text: "White-label terms negotiation", checked: false },
+                            { text: "Contract finalization", checked: false },
+                            { text: "Zone mapping (5 pickup zones)", checked: false },
+                            { text: "Kiosk placement agreement", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 503, 
+                        title: "PHASE 1: Guide Recruitment (500 guides)", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Guide profile definition", checked: false },
+                            { text: "Recruitment campaign launch", checked: false },
+                            { text: "Background verification system", checked: false },
+                            { text: "500 guides onboarded (Sydney/Melbourne)", checked: false },
+                            { text: "Guide training curriculum", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 504, 
+                        title: "PHASE 1: Credit System Design", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Credit pack tiers (10/25/100)", checked: false },
+                            { text: "Pricing strategy ($5 per credit)", checked: false },
+                            { text: "Breakage economics model", checked: false },
+                            { text: "Fraud prevention rules", checked: false },
+                            { text: "Credit gifting/sharing features", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+
+                    // PHASE 2: TECH MVP (Weeks 6-12)
+                    { 
+                        id: 505, 
+                        title: "PHASE 2: Consumer App - Core Booking", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "UX/UI design (pickup tiers)", checked: false },
+                            { text: "Real-time booking engine", checked: false },
+                            { text: "Guide matching algorithm", checked: false },
+                            { text: "Payment integration (Stripe)", checked: false },
+                            { text: "Live tracking system", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 506, 
+                        title: "PHASE 2: Consumer App - Sachet Marketplace", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Location-based discovery", checked: false },
+                            { text: "Mood-based filtering (Romantic/Solo/Family)", checked: false },
+                            { text: "Time-sensitive offers engine", checked: false },
+                            { text: "Bundle pass purchases", checked: false },
+                            { text: "In-app credit wallet", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 507, 
+                        title: "PHASE 2: Guide App - Upsell Interface", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "One-tap sachet offer creation", checked: false },
+                            { text: "Commission tracking dashboard", checked: false },
+                            { text: "Guest mood detection prompts", checked: false },
+                            { text: "Navigation & logistics tools", checked: false },
+                            { text: "Earnings & ratings display", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 508, 
+                        title: "PHASE 2: Partner Dashboard (White-Label)", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Service configuration UI", checked: false },
+                            { text: "Custom sachet bundle builder", checked: false },
+                            { text: "Real-time analytics (revenue/heatmaps)", checked: false },
+                            { text: "Staff training portal", checked: false },
+                            { text: "API integration management", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 509, 
+                        title: "PHASE 2: Prime Membership System", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Plus tier ($9.99/mo) design", checked: false },
+                            { text: "Elite tier ($29.99/mo) design", checked: false },
+                            { text: "Free monthly sachets allocation", checked: false },
+                            { text: "Priority guide access logic", checked: false },
+                            { text: "Family plan options", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+
+                    // PHASE 3: PILOT LAUNCH (Months 4-6)
+                    { 
+                        id: 510, 
+                        title: "PHASE 3: Sydney Airport Go-Live", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "3-tier pickup service live", checked: false },
+                            { text: "500 rides/day target", checked: false },
+                            { text: "Kiosk UI deployment", checked: false },
+                            { text: "Staff training completion", checked: false },
+                            { text: "Soft launch feedback loop", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 511, 
+                        title: "PHASE 3: Credit Pack Launch", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "10-credit pack ($49)", checked: false },
+                            { text: "25-credit pack ($99 + 2 bonus)", checked: false },
+                            { text: "100-credit pack ($349)", checked: false },
+                            { text: "20% user adoption target", checked: false },
+                            { text: "Auto-top-up feature", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 512, 
+                        title: "PHASE 3: Hotel Partnerships", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Meriton integration", checked: false },
+                            { text: "Ovolo integration", checked: false },
+                            { text: "50 properties onboarded", checked: false },
+                            { text: "Booking widget deployment", checked: false },
+                            { text: "Concierge training program", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 513, 
+                        title: "PHASE 3: Guide Upsell Engine", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "In-ride experience prompts", checked: false },
+                            { text: "15% conversion rate target", checked: false },
+                            { text: "Sachet: Eiffel Picnic equivalent", checked: false },
+                            { text: "Sachet: Local food trails", checked: false },
+                            { text: "Guide commission payments live", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 514, 
+                        title: "PHASE 3: Prime Beta Launch", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "5,000 subscriber target", checked: false },
+                            { text: "Free sachet delivery", checked: false },
+                            { text: "Premium pickup discounts", checked: false },
+                            { text: "Priority matching algorithm", checked: false },
+                            { text: "Retention tracking setup", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+
+                    // PHASE 4: SCALE (Months 7-12)
+                    { 
+                        id: 515, 
+                        title: "PHASE 4: Multi-City Expansion", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Melbourne launch", checked: false },
+                            { text: "Brisbane launch", checked: false },
+                            { text: "Perth launch", checked: false },
+                            { text: "100K rides/month target", checked: false },
+                            { text: "2,000 active guides", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 516, 
+                        title: "PHASE 4: Event Integration", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Vivid Sydney partnership", checked: false },
+                            { text: "F1 Melbourne activation", checked: false },
+                            { text: "QR drop packs at entry points", checked: false },
+                            { text: "$1M event revenue target", checked: false },
+                            { text: "5K Prime conversions from events", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 517, 
+                        title: "PHASE 4: Enterprise Partnerships", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Qantas partnership (pickup + rituals)", checked: false },
+                            { text: "Virgin Australia integration", checked: false },
+                            { text: "$10M B2B revenue target", checked: false },
+                            { text: "API white-label for airlines", checked: false },
+                            { text: "Revenue share agreements", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 518, 
+                        title: "PHASE 4: Prime Tier Expansion", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Elite tier launch", checked: false },
+                            { text: "Family plans (shared credits)", checked: false },
+                            { text: "100K paying members target", checked: false },
+                            { text: "Annual subscription option", checked: false },
+                            { text: "Corporate Prime for B2B", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 519, 
+                        title: "PHASE 4: Analytics & Optimization", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Real-time KPI dashboard", checked: false },
+                            { text: "Sachet performance tracking", checked: false },
+                            { text: "Guide conversion leaderboards", checked: false },
+                            { text: "Prime ARPU monitoring", checked: false },
+                            { text: "Automated re-engagement campaigns", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+
+                    // INFRASTRUCTURE & OPERATIONS
+                    { 
+                        id: 520, 
+                        title: "OPS: Physical Service Points", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Airport kiosk procurement", checked: false },
+                            { text: "Station point setup (Sydney Central)", checked: false },
+                            { text: "Local service point network", checked: false },
+                            { text: "QR code placement strategy", checked: false },
+                            { text: "Signage & wayfinding", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 521, 
+                        title: "OPS: Guide Operations Center", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "24/7 support team hiring", checked: false },
+                            { text: "Guide scheduling system", checked: false },
+                            { text: "Quality assurance protocols", checked: false },
+                            { text: "Dispute resolution process", checked: false },
+                            { text: "Safety & emergency procedures", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 522, 
+                        title: "TECH: Platform Architecture", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "React Native app development", checked: false },
+                            { text: "Node.js backend API", checked: false },
+                            { text: "PostgreSQL + Redis database", checked: false },
+                            { text: "Google Maps API integration", checked: false },
+                            { text: "Real-time WebSocket comms", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 523, 
+                        title: "MKT: Brand & Launch Campaign", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "ORN Service Points brand identity", checked: false },
+                            { text: "Launch campaign creative", checked: false },
+                            { text: "Influencer partnerships", checked: false },
+                            { text: "Airport advertising", checked: false },
+                            { text: "PR & media outreach", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    },
+                    { 
+                        id: 524, 
+                        title: "FIN: Revenue Model Validation", 
+                        status: "not-started", 
+                        checkboxes: [
+                            { text: "Unit economics confirmation", checked: false },
+                            { text: "$14.25 revenue per trip target", checked: false },
+                            { text: "30-40% take rate achievement", checked: false },
+                            { text: "Credit breakage tracking", checked: false },
+                            { text: "$130M Year 1 revenue forecast", checked: false }
+                        ], 
+                        comments: "", 
+                        files: [] 
+                    }
+                ]
             }
         };
 
         function loadData() {
-            const saved = localStorage.getItem('ornRoadmapData_v4');
+            const saved = localStorage.getItem('ornRoadmapData_v5');
             if (saved) {
                 const parsed = JSON.parse(saved);
                 Object.keys(parsed).forEach(laneKey => {
@@ -780,7 +1178,7 @@
         }
 
         function saveData() {
-            localStorage.setItem('ornRoadmapData_v4', JSON.stringify(roadmapData));
+            localStorage.setItem('ornRoadmapData_v5', JSON.stringify(roadmapData));
             document.getElementById('last-updated').textContent = new Date().toLocaleString();
         }
 
@@ -927,12 +1325,16 @@
 
         function updateStats() {
             let totalProgress = 0;
-            Object.keys(roadmapData).forEach(laneKey => {
+            const laneKeys = Object.keys(roadmapData);
+            laneKeys.forEach(laneKey => {
                 const progress = calculateLaneProgress(roadmapData[laneKey]);
-                document.getElementById(`${laneKey}-percent`).textContent = progress + '%';
+                const percentEl = document.getElementById(`${laneKey}-percent`);
+                if (percentEl) {
+                    percentEl.textContent = progress + '%';
+                }
                 totalProgress += progress;
             });
-            const overall = Math.round(totalProgress / 4);
+            const overall = Math.round(totalProgress / laneKeys.length);
             document.getElementById('overall-progress').textContent = overall + '%';
         }
 
